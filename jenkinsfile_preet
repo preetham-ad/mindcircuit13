@@ -1,0 +1,72 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'maven3'  // Ensure that 'maven3' is correctly configured in Jenkins Global Tool Configuration
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Cloning GitHub Repo'
+                git branch: 'main', url: 'https://github.com/preetham-ad/mindcircuit13.git'
+            }
+        }
+
+        stage('SonarQube Scan') {
+            steps {
+                echo 'Scanning project'
+                sh 'ls -ltr'
+                
+                sh '''mvn sonar:sonar \
+                      -Dsonar.host.url=http://54.162.140.225:9000/ \
+                      -Dsonar.login=squ_15e8e5899ff1ab444975f61402fefe4f9d96abaa'''
+            }
+        }
+
+        stage('Build Artifact') {
+            steps {
+                echo 'Building Artifact'
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Docker Image') {
+            steps {
+                echo 'Building Docker Image'
+                sh 'docker build -t preetham777/ultimate-cicd-pipeline:${BUILD_NUMBER} .'
+            }
+        }
+
+        stage('Push to Dockerhub') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'dockerhub', variable: 'dockerhub')]) {
+                        sh 'docker login -u preetham777 -p ${dockerhub}'
+                    }
+                    sh 'docker push preetham777/ultimate-cicd-pipeline:${BUILD_NUMBER}'
+                }
+            }
+        }
+
+        stage('Update Deployment File') {
+            environment {
+                GIT_REPO_NAME = "mindcircuit13"
+                GIT_USER_NAME = "preetham-ad"
+            }
+            steps {
+                echo 'Updating Deployment File'
+                withCredentials([string(credentialsId: 'githubtoken', variable: 'githubtoken')]) {
+                    sh '''
+                        git config user.email "asaipreetham98@gmail.com"
+                        git config user.name "preetham-ad"
+                        sed -i "s|preetham777/ultimate-cicd-pipeline:[^ ]*|preetham777/ultimate-cicd-pipeline:${BUILD_NUMBER}|g" deploymentfiles/deployment.yml
+                        git add deploymentfiles/deployment.yml
+                        git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                        git push https://${githubtoken}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git HEAD:main 
+                    '''
+                }
+            }
+        }
+    }
+}
