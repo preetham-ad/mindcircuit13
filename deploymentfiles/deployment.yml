@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: mc-app
-        image: preetham777/ultimate-cicd-pipeline:3
+        image: preetham777/ultimate-cicd-pipeline:5
         ports:
         - containerPort: 8080
 
