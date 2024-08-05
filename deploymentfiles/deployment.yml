@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: mc-app
-        image: devopshubg333/batch13:35
+        image: preetham777/ultimate-cicd-pipeline:3
         ports:
         - containerPort: 8080
 
