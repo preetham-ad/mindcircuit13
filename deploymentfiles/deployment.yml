@@ -2,21 +2,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: preetham-dv
+  name: mc-app
   labels:
-    app: preetham-dv
+    app: mc-app
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: preetham-dv
+      app: mc-app
   template:
     metadata:
       labels:
-        app: preetham-dv
+        app: mc-app
     spec:
       containers:
-      - name: preetham-dv
+      - name: mc-app
         image: preetham777/ultimate-cicd-pipeline:5
         ports:
         - containerPort: 8080
